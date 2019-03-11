@@ -2,6 +2,16 @@ import robomodules as rm
 from messages import *
 from .variables import *
 from .spriteStripAnim import *
+import time
+import gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk as gtk
+
+#Gets screen res to set viewing window size
+window = gtk.Window()
+screen = window.get_screen()
+SCREEN_W = int(screen.get_width() * 0.8)
+SCREEN_H = int(screen.get_height() * 0.8)
 
 class Visualizer(rm.ProtoModule):
     def __init__(self, addr, port, print_walls, print_pacman, split=Split.FULL):
@@ -22,19 +32,23 @@ class Visualizer(rm.ProtoModule):
         }
 
         pygame.init()
+
         # Set up the surface to draw on
         # This should also be used in Visualizer.draw()
         self.surface = pygame.Surface((GRID_SIZE[0]*SQUARE_SIZE, GRID_SIZE[1]*SQUARE_SIZE))
         self.split = split
+
         self.y_height = int(GRID_SIZE[1]*SQUARE_SIZE/2)
         if GRID_SIZE[1] % 2 == 1 and self.split == Split.BOTTOM:
             self.y_height += 1
         elif self.split == Split.FULL:
             self.y_height = GRID_SIZE[1]*SQUARE_SIZE
         self.display_surface = pygame.display.set_mode((GRID_SIZE[0]*SQUARE_SIZE, self.y_height))
+
+        # self.display_surface = pygame.display.set_mode((GRID_SIZE[0]*SQUARE_SIZE, self.y_height))
+        self.display_surface = pygame.display.set_mode((GRID_SIZE[0]*SQUARE_SIZE, self.y_height))
         pygame.display.set_caption("PACBOT")
         self.font = pygame.font.Font('graphics/crackman.ttf', int(SQUARE_SIZE))
-
         self._init_sprites()
 
 
@@ -332,6 +346,9 @@ class Visualizer(rm.ProtoModule):
 
             # Yay flipping the entire display all at once for performance!
             y_off = 0 if self.split in [Split.TOP, Split.FULL] else self.y_height
-            self.display_surface.blit(self.surface, pygame.Rect(0, -y_off, GRID_SIZE[0]*SQUARE_SIZE, self.y_height))
+            # self.display_surface.blit(self.surface, pygame.Rect(0, -y_off, GRID_SIZE[0]*SQUARE_SIZE, self.y_height))
+            resized_screen = pygame.transform.scale(self.surface, (SCREEN_H ,SCREEN_H)) 
+            self.display_surface.blit(resized_screen, (0, 0))
             pygame.display.flip()
             self.last_tick = self.state.update_ticks
+
